@@ -650,5 +650,17 @@
   bindMeta('#metaNum', 'num', true);
   bindMeta('#metaPos', 'pos');
 
+  /* ================= mobile properties drawer ================= */
+  const togglePanel = open => {
+    const p = $('#panel'), b = $('#panelBackdrop');
+    if (!p || !b) return;
+    const isNowOpen = open ?? !p.classList.contains('open');
+    p.classList.toggle('open', isNowOpen);
+    b.classList.toggle('open', isNowOpen);
+  };
+  $('#btnProps')?.addEventListener('click', () => togglePanel());
+  $('#panelClose')?.addEventListener('click', () => togglePanel(false));
+  $('#panelBackdrop')?.addEventListener('click', () => togglePanel(false));
+
   syncUI();
 })();
