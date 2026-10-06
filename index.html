@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tandai-ss — Anotasi Screenshot</title>
+<meta name="description" content="Tandai dan beri anotasi pada screenshot langsung di browser: kotak, panah, teks, highlight, sensor blur, nomor langkah, dan crop. Semua diproses lokal.">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  (function(){
+    var t = null;
+    try { t = localStorage.getItem('tandai-theme'); } catch(e){}
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">
+    <span class="logo-mark"></span>
+    <h1>tandai<span>-ss</span></h1>
+  </div>
+
+  <div class="bar-group">
+    <button class="btn" id="btnOpen" title="Buka gambar (Ctrl+O)">Buka File</button>
+    <button class="btn icon" id="btnUndo" title="Undo (Ctrl+Z)" disabled>
+      <svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg>
+    </button>
+    <button class="btn icon" id="btnRedo" title="Redo (Ctrl+Y)" disabled>
+      <svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h3"/></svg>
+    </button>
+  </div>
+
+  <div class="grow"></div>
+
+  <div class="bar-group">
+    <button class="btn icon" id="btnTheme" title="Ganti tema terang / gelap" aria-label="Ganti tema">
+      <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+    </button>
+    <button class="btn" id="btnCopy" title="Salin ke clipboard (Ctrl+C)" disabled>Salin</button>
+    <button class="btn solid" id="btnSave" title="Simpan gambar aktif sebagai PNG (Ctrl+S)" disabled>Simpan PNG</button>
+    <button class="btn solid" id="btnZip" title="Simpan semua gambar + manifest SHA-256 dalam satu ZIP" hidden>ZIP</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <nav class="rail" id="rail" aria-label="Alat">
+    <button data-tool="select" title="Pilih / geser (V)">
+      <svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 2-3 6z"/></svg>
+    </button>
+    <button data-tool="rect" title="Kotak (R)">
+      <svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg>
+    </button>
+    <button data-tool="ellipse" title="Elips (O)">
+      <svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="6.5"/></svg>
+    </button>
+    <button data-tool="arrow" title="Panah (A)">
+      <svg viewBox="0 0 24 24"><path d="M5 19L19 5M19 5v8M19 5h-8"/></svg>
+    </button>
+    <button data-tool="highlight" title="Highlighter (H)">
+      <svg viewBox="0 0 24 24"><path d="M4 20h8M14 4l6 6-8 8-6-6z"/></svg>
+    </button>
+    <button data-tool="text" title="Teks (T)">
+      <svg viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg>
+    </button>
+    <button data-tool="step" title="Nomor langkah (N)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10 10l2-1.5V16"/></svg>
+    </button>
+    <button data-tool="pixelate" title="Sensor / pixelate (B)">
+      <svg viewBox="0 0 24 24"><path d="M4 4h5v5H4zM14 4h6v5h-6zM9 9h5v5H9zM4 14h5v6H4zM14 14h6v6h-6z"/></svg>
+    </button>
+    <button data-tool="crop" title="Crop (C)">
+      <svg viewBox="0 0 24 24"><path d="M6 2v16h16M2 6h16v16"/></svg>
+    </button>
+  </nav>
+
+  <main class="stage" id="stage">
+    <div class="viewport" id="viewport">
+    <div class="empty" id="empty">
+      <div class="empty-card">
+        <h2>Mulai menandai</h2>
+        <p>Tekan <kbd>Ctrl</kbd> + <kbd>V</kbd> untuk menempel screenshot,<br>
+        seret file gambar ke sini, atau pilih dari komputer.</p>
+        <button class="btn solid" id="btnBrowse">Pilih gambar…</button>
+      </div>
+    </div>
+    <canvas id="canvas" hidden></canvas>
+    </div>
+
+    <div class="crop-bar" id="cropBar" hidden>
+      <span>Area crop dipilih</span>
+      <button class="btn solid" id="cropApply">Terapkan (Enter)</button>
+      <button class="btn" id="cropCancel">Batal (Esc)</button>
+    </div>
+  </main>
+
+  <aside class="panel" aria-label="Properti">
+    <section>
+      <h3>Warna</h3>
+      <div class="swatches" id="swatches">
+        <button data-color="#ef4444" style="--c:#ef4444" title="Merah"></button>
+        <button data-color="#f97316" style="--c:#f97316" title="Oranye"></button>
+        <button data-color="#facc15" style="--c:#facc15" title="Kuning"></button>
+        <button data-color="#22c55e" style="--c:#22c55e" title="Hijau"></button>
+        <button data-color="#0ea5e9" style="--c:#0ea5e9" title="Biru"></button>
+        <button data-color="#a855f7" style="--c:#a855f7" title="Ungu"></button>
+        <button data-color="#111827" style="--c:#111827" title="Hitam"></button>
+        <button data-color="#ffffff" style="--c:#ffffff" title="Putih"></button>
+      </div>
+      <label class="custom-color">
+        <input type="color" id="colorPick" value="#ef4444">
+        <span>Warna lain…</span>
+      </label>
+    </section>
+
+    <section>
+      <h3>Ukuran <output id="sizeOut">4</output></h3>
+      <input type="range" id="size" min="1" max="24" value="4">
+      <p class="hint">Tebal garis, ukuran teks, ukuran nomor, atau kekasaran blur.</p>
+    </section>
+
+    <section id="fillSection">
+      <h3>Isi</h3>
+      <div class="seg" id="fillSeg">
+        <button data-fill="none">Kosong</button>
+        <button data-fill="soft">Lembut</button>
+        <button data-fill="solid">Penuh</button>
+      </div>
+    </section>
+
+    <section>
+      <h3>Gaya sensor (B)</h3>
+      <div class="seg" id="modeSeg">
+        <button data-mode="pixel">Pixel</button>
+        <button data-mode="blur">Blur</button>
+        <button data-mode="black">Hitam</button>
+      </div>
+      <p class="hint">Untuk data sangat sensitif pilih <b>Hitam</b>; blur/pixel yang ringan masih bisa ditebak.</p>
+    </section>
+
+    <section class="meta">
+      <h3>Bukti</h3>
+      <label class="check"><input type="checkbox" id="metaOn"> Tampilkan stempel di gambar</label>
+      <input type="text" id="metaRef" placeholder="No. tiket / referensi" autocomplete="off">
+      <input type="text" id="metaAuthor" placeholder="Nama pembuat" autocomplete="off">
+      <label class="check"><input type="checkbox" id="metaTime"> Waktu (tanggal, jam, zona)</label>
+      <label class="check"><input type="checkbox" id="metaNum"> Nomor halaman (n/N)</label>
+      <select id="metaPos">
+        <option value="br">Pojok kanan bawah</option>
+        <option value="bl">Pojok kiri bawah</option>
+        <option value="tr">Pojok kanan atas</option>
+        <option value="tl">Pojok kiri atas</option>
+      </select>
+      <p class="hint">Referensi dipakai juga sebagai awalan nama file. Waktu = saat gambar dimasukkan.</p>
+    </section>
+
+    <section>
+      <h3>Objek terpilih</h3>
+      <div class="row">
+        <button class="btn" id="btnDup" disabled>Duplikat</button>
+        <button class="btn danger" id="btnDel" disabled>Hapus</button>
+      </div>
+      <button class="btn wide" id="btnClear" disabled>Hapus semua anotasi</button>
+    </section>
+
+    <section class="keys">
+      <h3>Pintasan</h3>
+      <p><kbd>V</kbd> pilih <kbd>R</kbd> kotak <kbd>O</kbd> elips <kbd>A</kbd> panah</p>
+      <p><kbd>H</kbd> highlight <kbd>T</kbd> teks <kbd>N</kbd> nomor</p>
+      <p><kbd>B</kbd> sensor <kbd>C</kbd> crop <kbd>Del</kbd> hapus</p>
+      <p><kbd>Shift</kbd> saat menggambar: proporsional / 45°</p>
+      <p><kbd>Ctrl</kbd>+scroll zoom, <kbd>Space</kbd>+seret geser</p>
+      <p><kbd>+</kbd> <kbd>-</kbd> zoom, <kbd>0</kbd> fit, <kbd>1</kbd> 100%</p>
+    </section>
+  </aside>
+</div>
+
+<div class="strip" id="strip" hidden></div>
+
+<footer class="status">
+  <span id="stSize">Belum ada gambar</span>
+  <span id="stPos"></span>
+  <span class="grow"></span>
+  <span class="zoom">
+    <button id="zOut" title="Perkecil (-)">−</button>
+    <button id="stZoom" title="Klik: pas ke jendela (0)"></button>
+    <button id="zIn" title="Perbesar (+)">+</button>
+    <button id="z100" title="Ukuran asli (1)">1:1</button>
+  </span>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
+<input type="file" id="fileInput" accept="image/*" multiple hidden>
+
+<script src="js/model.js"></script>
+<script src="js/export.js"></script>
+<script src="js/render.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
