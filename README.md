@@ -78,19 +78,12 @@ cd tandai-ss
 # Buka file index.html di browser
 ```
 
-### 2. Deploy ke GitHub Pages (Gratis & HTTPS)
-Aplikasi ini 100% statis tanpa dependensi `npm` atau build step:
+### 2. Akses Online (Live Demo)
+Aplikasi sudah aktif dan siap langsung digunakan tanpa instalasi apa pun:
 
-1. Buka repositori di GitHub: `https://github.com/hanifalkauni/tandai-ss`
-2. Masuk ke tab **Settings** > **Pages**
-3. Di bagian **Build and deployment > Source**, pilih **Deploy from a branch**
-4. Pilih branch `main` dan folder `/ (root)`, lalu klik **Save**
-5. Tunggu 1–2 menit, web akan aktif di:
-   ```
-   https://hanifalkauni.github.io/tandai-ss/
-   ```
+👉 **[https://hanifalkauni.github.io/tandai-ss/](https://hanifalkauni.github.io/tandai-ss/)**
 
-*(Catatan: Fitur salin ke clipboard dan SHA-256 berjalan optimal pada protokol HTTPS seperti GitHub Pages atau localhost).*
+*(Catatan: Fitur salin ke clipboard dan SHA-256 berjalan optimal via HTTPS).*
 
 ---
 
