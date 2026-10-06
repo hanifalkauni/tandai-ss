@@ -1,5 +1,11 @@
 # tandai-ss ✍️🔍
 
+[![Demo Online](https://img.shields.io/badge/Demo-Live%20Online-0d9488?style=flat-square&logo=github&logoColor=white)](https://hanifalkauni.github.io/tandai-ss/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6.svg?style=flat-square)](LICENSE)
+[![Vanilla JS](https://img.shields.io/badge/Vanilla_JS-ES6+-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](js/app.js)
+[![HTML5 / CSS3](https://img.shields.io/badge/Stack-HTML5%20%7C%20CSS3-E34F26?style=flat-square&logo=html5&logoColor=white)](index.html)
+[![Privacy 100% Client-Side](https://img.shields.io/badge/Privacy-100%25%20Client--Side-10b981?style=flat-square&logo=shield)](README.md)
+
 > **Anotasi Screenshot & Bukti (Evidence Marker) Berbasis Web yang Cepat, Praktis, dan 100% Lokal.**
 
 **tandai-ss** adalah aplikasi web statis ringan untuk memberi tanda, catatan, nomor langkah, dan sensor pada screenshot sebelum dibagikan ke tiket bug, laporan QA, audit, atau dokumentasi teknis.
